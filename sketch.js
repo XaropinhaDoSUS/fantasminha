@@ -2,8 +2,9 @@ var towerImg, tower;
 var doorImg, door, doorsGroup;
 var climberImg, climber, climbersGroup;
 var ghost, ghostImg;
-var invisibleBlockGroup, invisibleBlock;
-var gameState = "play"
+var invisibleBlockGroup;
+// play, end
+var gameState = "play";
 
 function preload(){
   towerImg = loadImage("tower.png");
@@ -15,11 +16,14 @@ function preload(){
 
 function setup() {
   createCanvas(600, 600);
+  spookySound.setVolume(0.1);
+  //spookySound.play()
   tower = createSprite(300,300);
   tower.addImage("tower",towerImg);
   tower.velocityY = 5;
   doorsGroup= new Group();
   climbersGroup= new Group();
+  invisibleBlockGroup= new Group();
   
   ghost= createSprite(200,200,50,50);
   ghost.addImage("ghost",ghostImg);
@@ -30,23 +34,50 @@ function setup() {
 function draw() {
   background(200);
   
-  if(tower.y > 400){
-    tower.y = 300
+  if (gameState == "play") {
+
+    if(tower.y > 400){
+      tower.y = 300
+    }
+  
+    if(keyDown("space")){
+      ghost.velocityY=-10;
+    }
+    // efeito gravidade
+    ghost.velocityY += 0.8;
+  
+    if(keyDown("left_arrow")){
+      ghost.x -= 4;
+    }
+  
+    if(keyDown("right_arrow")){
+      ghost.x += 4; 
+    }
+  
+    // climbersGroup.collide(ghost);
+    if (climbersGroup.isTouching(ghost)) {
+      ghost.velocityY = 0;
+    }
+  
+    createDoors();
+
+    if(ghost.y>600){ 
+      gameState="end";    
+
+    }
+
+  } else if (gameState == "end") {
+    // game over
+    background("black");
+    stroke("yellow");
+    fill("yellow");
+    textSize(30);
+    text("Game Over", 230, 250);
+    
+
   }
 
-  if(keyDown("space")){
-    ghost.velocityY=-10;
-  }
-  ghost.velocityY += 0.8;
 
-  if(keyDown("left_arrow")){
-    ghost.x -= 4;
-  }
-  if(keyDown("right_arrow")){
-    ghost.x += 4; 
-  }
-
-  createDoors();
   drawSprites();
 }
 
@@ -54,20 +85,37 @@ function createDoors(){
   if (frameCount%80===0) {
     var door = createSprite(200,-50);
     var climber = createSprite(200,10);
+    var invisibleBlock = createSprite(200, 15);
+
+    invisibleBlock.width = climber.width;
+    invisibleBlock.height = 2;
 
     door.x= Math.round(random(120,400));
     climber.x=door.x;
+    invisibleBlock.x = door.x;
     
     door.addImage(doorImg);
     climber.addImage(climberImg);
+
     door.velocityY= 5;
-    climber.velocityY= 5
+    climber.velocityY= 5;
+    invisibleBlock.velocityY = 5;
+
+    // profundidade
+    ghost.depth = door.depth;
+    // traz o ghost pra frente da porta
+    ghost.depth += 1;
 
     door.lifetime=800;
     climber.lifetime=800;
+    invisibleBlock.lifetime=800;
+
+
+    invisibleBlock.debug = true;
 
     doorsGroup.add(door);
     climbersGroup.add(climber);
+    invisibleBlockGroup.add(invisibleBlock);
   }
 
 }
